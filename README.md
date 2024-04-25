@@ -51,7 +51,7 @@ Generates a new UUIDv7.
 #### `genMany`
 
 ```typescript
-genMany(amount: number) => string
+genMany(amount: number) => string[]
 ```
 
 Generates a custom amount of UUIDv7s.
