@@ -1,0 +1,60 @@
+{
+	"name": "uuidv7-js",
+	"version": "0.0.0-development",
+	"author": "Edoardo Ranghieri",
+	"description": "UUIDv7 generator library for Node.js",
+	"private": false,
+	"main": "dist/index.js",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist/**",
+		"package.json"
+	],
+	"scripts": {
+		"prepare": "is-ci || husky",
+		"lint": "tsc && prettier --write . && eslint .",
+		"build": "tsup ./src/index.ts --format cjs,esm --dts",
+		"test": "node --import tsx --test ./src/*.test.ts",
+		"deploy": "semantic-release"
+	},
+	"keywords": [
+		"uuid",
+		"uuidv7",
+		"uuid generator"
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/TheEdoRan/uuidv7-js.git"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"config": {
+		"commitizen": {
+			"path": "./node_modules/cz-conventional-changelog"
+		}
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^19.3.0",
+		"@commitlint/config-conventional": "^19.2.2",
+		"@eslint/js": "^9.1.1",
+		"@types/node": "^20.12.7",
+		"commitizen": "^4.3.0",
+		"cz-conventional-changelog": "^3.3.0",
+		"eslint": "^8.57.0",
+		"eslint-config-prettier": "^9.1.0",
+		"husky": "^9.0.11",
+		"is-ci": "^3.0.1",
+		"prettier": "^3.2.5",
+		"semantic-release": "^23.0.8",
+		"tsup": "^8.0.2",
+		"tsx": "^4.7.2",
+		"typescript": "^5.4.5",
+		"typescript-eslint": "^7.7.1"
+	},
+	"dependencies": {
+		"base-x": "^4.0.0"
+	}
+}

@@ -1,0 +1,10 @@
+{
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"prettier.enable": true,
+	"eslint.validate": ["typescript"],
+	"eslint.experimental.useFlatConfig": true,
+	"editor.codeActionsOnSave": {
+		"source.organizeImports": "explicit",
+		"source.fixAll.eslint": "explicit"
+	}
+}
