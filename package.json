@@ -2,7 +2,7 @@
 	"name": "uuidv7-js",
 	"version": "0.0.0-development",
 	"author": "Edoardo Ranghieri",
-	"description": "UUIDv7 generator library for Node.js",
+	"description": "UUIDv7 generator library for JavaScript",
 	"private": false,
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",

@@ -1,5 +1,4 @@
 import baseX from "base-x";
-import { randomBytes, randomInt } from "crypto";
 
 function addHyphens(id: string) {
 	return (
@@ -13,6 +12,13 @@ function addHyphens(id: string) {
 		"-" +
 		id.substring(20)
 	);
+}
+
+// Generates the 62 bits [rand_b] part in bigint format.
+function genRandB() {
+	const id = crypto.randomUUID().replace(/-/g, "");
+	const mask = (1n << 62n) - 1n;
+	return BigInt("0x" + id) & mask;
 }
 
 export class UUIDv7 {
@@ -55,8 +61,8 @@ export class UUIDv7 {
 
 			if (timestamp > this.#lastTimestamp) {
 				// If current timestamp is after the last stored one, generate new [rand_a] and [rand_b] parts.
-				randA = randomInt(0, 2 ** 12);
-				randB = BigInt("0x" + randomBytes(8).toString("hex")) % 2n ** 62n;
+				randA = crypto.getRandomValues(new Uint16Array(1))[0]! % 2 ** 12;
+				randB = genRandB();
 			} else if (timestamp < this.#lastTimestamp) {
 				// If current timestamp is before the last stored one, it means that the system clock went
 				// backwards. So wait until it goes ahead before generating new UUIDs.
@@ -70,8 +76,8 @@ export class UUIDv7 {
 				// Keep the same [rand_a] part by default.
 				randA = this.#lastRandA;
 
-				// Random increment value is between 2 ** 6 (64) and 2 ** 16 - 1 (65535).
-				randB = this.#lastRandB + BigInt(randomInt(2 ** 6, 2 ** 16));
+				// Random increment value is between 1 and 2 ** 16 (65536).
+				randB = this.#lastRandB + BigInt(crypto.getRandomValues(new Uint16Array(1))[0]! + 1);
 
 				// In the rare case that [rand_b] overflows its 62 bits after the increment,
 				if (randB > 2n ** 62n - 1n) {
@@ -85,7 +91,7 @@ export class UUIDv7 {
 					}
 
 					// When [rand_b] overflows its 62 bits, always generate a new random part for it.
-					randB = BigInt("0x" + randomBytes(8).toString("hex")) % 2n ** 62n;
+					randB = genRandB();
 				}
 			}
 
