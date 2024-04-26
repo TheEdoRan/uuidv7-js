@@ -25,7 +25,7 @@ export class UUIDv7 {
 	#lastTimestamp: number = -1;
 	#lastRandA: number;
 	#lastRandB: bigint;
-	#lastNumUUID: bigint = -1n;
+	#lastUUID: bigint = -1n;
 	#encoder: baseX.BaseConverter;
 
 	/**
@@ -51,9 +51,9 @@ export class UUIDv7 {
 	 * @returns {string} UUIDv7
 	 */
 	gen() {
-		let numUUID = this.#lastNumUUID;
+		let uuid = this.#lastUUID;
 
-		while (this.#lastNumUUID >= numUUID) {
+		while (this.#lastUUID >= uuid) {
 			const timestamp = Date.now();
 
 			let randA: number;
@@ -96,7 +96,7 @@ export class UUIDv7 {
 			}
 
 			// [unix_ts_ms] timestamp in milliseconds - 48 bits
-			let uuid = BigInt(timestamp) << 80n;
+			uuid = BigInt(timestamp) << 80n;
 
 			// [ver] version "7" - 4 bits
 			uuid = uuid | (0b0111n << 76n);
@@ -113,12 +113,10 @@ export class UUIDv7 {
 			this.#lastTimestamp = timestamp;
 			this.#lastRandA = randA;
 			this.#lastRandB = randB;
-
-			numUUID = uuid;
 		}
 
-		this.#lastNumUUID = numUUID;
-		return addHyphens(numUUID.toString(16).padStart(32, "0"));
+		this.#lastUUID = uuid;
+		return addHyphens(uuid.toString(16).padStart(32, "0"));
 	}
 
 	/**
