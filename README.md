@@ -119,7 +119,7 @@ The library provides a few function aliases for convenience. You can use them wi
 
 ## Implementation details
 
-This library follows the [draft-ietf-uuidrev-rfc4122bis-11](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#name-uuid-version-7) draft to generate UUIDv7s:
+This library follows the [draft-ietf-uuidrev-rfc4122bis](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#name-uuid-version-7) draft to generate UUIDv7s:
 
 - if the current timestamp is ahead of the last stored one, it generates new [rand_a] and [rand_b] parts;
 - if the current timestamp is behind the last stored one, it waits for the next valid timestamp to return a UUIDv7 with newly generated random parts;
@@ -127,7 +127,7 @@ This library follows the [draft-ietf-uuidrev-rfc4122bis-11](https://www.ietf.org
   - it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order. `rand_b` is the primary counter, and `rand_a` is used as the secondary one, when `rand_b` overflows its 62 bits (rare case). When used as a counter, `rand_b` increments its previous random value by a random integer between 2^6 (64) and 2^16 - 1 (65535), and `rand_a` increments its previous random value by 1, while generating a new `rand_b` part.
   - if both counters overflow their bit sizes, the generation function waits for the next millisecond to return a UUIDv7 with newly generated random parts.
 
-This approach follows the [method 2](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#monotonicity_counters) of the "Monotonicity and Counters" section of the draft. It guarantees monotonicity and uniqueness per instance, and always keeps timestamp the same as `Date.now()` value.
+This approach follows the [method 2](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#monotonicity_counters) of the "Monotonicity and Counters" section of the draft. It guarantees monotonicity and uniqueness per instance, and always keeps timestamp the same as `Date.now()` value.
 
 ## Field and Bit Layout
 
@@ -151,23 +151,23 @@ This is the UUIDv7 Field and Bit Layout, took from the draft linked above:
 
 #### unix_ts_ms
 
-48 bit big-endian unsigned number of Unix epoch timestamp in milliseconds as per [Section 6.1](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#timestamp_considerations). Occupies bits 0 through 47 (octets 0-5).
+48 bit big-endian unsigned number of Unix epoch timestamp in milliseconds as per [Section 6.1](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#timestamp_considerations). Occupies bits 0 through 47 (octets 0-5).
 
 #### ver
 
-The 4 bit version field as defined by [Section 4.2](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#version_field), set to 0b0111 (7). Occupies bits 48 through 51 of octet 6.
+The 4 bit version field as defined by [Section 4.2](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#version_field), set to 0b0111 (7). Occupies bits 48 through 51 of octet 6.
 
 #### rand_a
 
-12 bits pseudo-random data to provide uniqueness as per [Section 6.8](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#unguessability) and/or optional constructs to guarantee additional monotonicity as per [Section 6.2](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#monotonicity_counters). Occupies bits 52 through 63 (octets 6-7).
+12 bits pseudo-random data to provide uniqueness as per [Section 6.9](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#unguessability) and/or optional constructs to guarantee additional monotonicity as per [Section 6.2](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#monotonicity_counters). Occupies bits 52 through 63 (octets 6-7).
 
 #### var
 
-The 2 bit variant field as defined by [Section 4.1](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#variant_field), set to 0b10. Occupies bits 64 and 65 of octet 8.
+The 2 bit variant field as defined by [Section 4.1](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#variant_field), set to 0b10. Occupies bits 64 and 65 of octet 8.
 
 #### rand_b
 
-The final 62 bits of pseudo-random data to provide uniqueness as per [Section 6.8](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#unguessability) and/or an optional counter to guarantee additional monotonicity as per [Section 6.2](https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#monotonicity_counters). Occupies bits 66 through 127 (octets 8-15).
+The final 62 bits of pseudo-random data to provide uniqueness as per [Section 6.9](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#unguessability) and/or an optional counter to guarantee additional monotonicity as per [Section 6.2](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#monotonicity_counters). Occupies bits 66 through 127 (octets 8-15).
 
 ## Feedback
 

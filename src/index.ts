@@ -53,23 +53,22 @@ export class UUIDv7 {
 			let randA: number;
 			let randB: bigint;
 
-			// If current timestamp is after the last stored one, generate new [rand_a] and [rand_b] parts.
 			if (timestamp > this.#lastTimestamp) {
+				// If current timestamp is after the last stored one, generate new [rand_a] and [rand_b] parts.
 				randA = randomInt(0, 2 ** 12);
 				randB = BigInt("0x" + randomBytes(8).toString("hex")) % 2n ** 62n;
-
+			} else if (timestamp < this.#lastTimestamp) {
 				// If current timestamp is before the last stored one, it means that the system clock went
 				// backwards. So wait until it goes ahead before generating new UUIDs.
-			} else if (timestamp < this.#lastTimestamp) {
 				continue;
-
-				// Otherwise, current timestamp is the same as the previous one.
 			} else {
+				// Otherwise, current timestamp is the same as the previous one.
+
+				// Method 2 - Monotonic Random
+				// https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#monotonicity_counters
+
 				// Keep the same [rand_a] part by default.
 				randA = this.#lastRandA;
-
-				// Method 2 - monotonic random for [rand_b]:
-				// https://www.ietf.org/archive/id/draft-ietf-uuidrev-rfc4122bis-11.html#monotonicity_counters
 
 				// Random increment value is between 2 ** 6 (64) and 2 ** 16 - 1 (65535).
 				randB = this.#lastRandB + BigInt(randomInt(2 ** 6, 2 ** 16));
