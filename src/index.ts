@@ -16,9 +16,13 @@ function addHyphens(id: string) {
 
 // Generates the 62 bits [rand_b] part in bigint format.
 function genRandB() {
-	const id = crypto.randomUUID().replace(/-/g, "");
+	// Generate random 64 bits and convert them to hex.
+	const hex = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+		.map((i) => i.toString(16).padStart(2, "0"))
+		.join("");
+
 	const mask = (1n << 62n) - 1n;
-	return BigInt("0x" + id) & mask;
+	return BigInt("0x" + hex) & mask;
 }
 
 export class UUIDv7 {
