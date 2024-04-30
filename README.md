@@ -124,7 +124,7 @@ This library follows the [draft-ietf-uuidrev-rfc4122bis](https://datatracker.iet
 - if the current timestamp is ahead of the last stored one, it generates new `rand_a` and `rand_b` parts;
 - if the current timestamp is behind the last stored one, it waits for the next valid timestamp to return a UUIDv7 with newly generated `rand_a` and `rand_b` parts;
 - if the current timestamp is the same as the last stored one:
-  - it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order. `rand_b` is the primary counter, and `rand_a` is used as the secondary one, when `rand_b` overflows its 62 bits (rare case). When used as a counter, `rand_b` increments its previous random value by a random integer between 1 and 65536 (2^16), and `rand_a` increments its previous random value by 1, while generating a new `rand_b` part.
+  - it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order. `rand_b` is the primary counter, and `rand_a` is used as the secondary one, when `rand_b` overflows its 62 bits (rare case). When used as a counter, `rand_b` increments its previous random value by a random integer between 1 and 4,294,967,296 (2^32), and `rand_a` increments its previous random value by 1, while generating a new `rand_b` part.
   - if both counters overflow their bit sizes, the generation function waits for the next millisecond to return a UUIDv7 with newly generated random parts.
 
 This approach follows the [method 2](https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#monotonicity_counters) of the "Monotonicity and Counters" section of the draft. It guarantees monotonicity and uniqueness per instance, and always keeps timestamp the same as `Date.now()` value.

@@ -76,8 +76,8 @@ export class UUIDv7 {
 				// Keep the same [rand_a] part by default.
 				randA = this.#lastRandA;
 
-				// Random increment value is between 1 and 2 ** 16 (65536).
-				randB = this.#lastRandB + BigInt(crypto.getRandomValues(new Uint16Array(1))[0]! + 1);
+				// Random increment value is between 1 and 2 ** 32 (4,294,967,296).
+				randB = this.#lastRandB + BigInt(crypto.getRandomValues(new Uint32Array(1))[0]! + 1);
 
 				// In the rare case that [rand_b] overflows its 62 bits after the increment,
 				if (randB > 2n ** 62n - 1n) {
