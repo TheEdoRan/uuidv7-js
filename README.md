@@ -15,11 +15,11 @@ import { UUIDv7, uuidv7, encodeUUIDv7, decodeUUIDv7 } from "uuidv7-js";
 
 // Initialize a new UUIDv7 generator.
 // You can pass a custom encoding alphabet here.
-const uuidv7 = new UUIDv7();
+const uuid = new UUIDv7();
 
-const id = uuidv7.gen(); // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b7
-const encoded = uuidv7.encode(id); // CANANjseoigQthQMd1VwC
-const decoded = uuidv7.decode(encoded); // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b7
+const id = uuid.gen(); // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b7
+const encoded = uuid.encode(id); // CANANjseoigQthQMd1VwC
+const decoded = uuid.decode(encoded); // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b7
 const isValid = UUIDv7.isValid(id); // true
 const timestamp = UUIDv7.timestamp(id); // 1713489088738
 const date = UUIDv7.date(id); // 2024-04-19T01:11:28.738Z
@@ -33,7 +33,7 @@ const decoded = decodeUUIDv7(encoded); // // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b
 ## Create a new instance
 
 ```typescript
-new UUIDv7(opts?: { encodeAlphabet: string })
+const uuid = new UUIDv7(opts?: { encodeAlphabet: string })
 ```
 
 Creates a new `UUIDv7` instance. By default it uses the [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2) alphabet to `encode` and `decode` UUIDs, but you can pass a custom alphabet (16-64 characters).
