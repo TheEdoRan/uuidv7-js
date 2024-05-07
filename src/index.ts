@@ -14,11 +14,14 @@ function addHyphens(id: string) {
 	);
 }
 
-// Generates the 62 bits [rand_b] part in bigint format.
-function genRandB() {
-	const hex = crypto.randomUUID().replace(/-/g, "");
-	const mask = (1n << 62n) - 1n;
-	return BigInt("0x" + hex) & mask;
+// Generates the 12 [rand_a] and 62 bits [rand_b] parts in number and bigint formats.
+function genRandParts() {
+	const v4 = crypto.randomUUID();
+
+	return {
+		randA: parseInt(v4.slice(15, 18), 16),
+		randB: BigInt("0x" + v4.replace(/-/g, "")) & ((1n << 62n) - 1n),
+	};
 }
 
 export class UUIDv7 {
@@ -61,8 +64,9 @@ export class UUIDv7 {
 
 			if (timestamp > this.#lastTimestamp) {
 				// If current timestamp is after the last stored one, generate new [rand_a] and [rand_b] parts.
-				randA = crypto.getRandomValues(new Uint16Array(1))[0]! % 2 ** 12;
-				randB = genRandB();
+				const parts = genRandParts();
+				randA = parts.randA;
+				randB = parts.randB;
 			} else if (timestamp < this.#lastTimestamp) {
 				// If current timestamp is before the last stored one, it means that the system clock went
 				// backwards. So wait until it goes ahead before generating new UUIDs.
@@ -91,7 +95,7 @@ export class UUIDv7 {
 					}
 
 					// When [rand_b] overflows its 62 bits, always generate a new random part for it.
-					randB = genRandB();
+					randB = genRandParts().randB;
 				}
 			}
 
