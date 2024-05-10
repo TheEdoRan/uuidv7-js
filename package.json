@@ -2,7 +2,7 @@
 	"name": "uuidv7-js",
 	"version": "0.0.0-development",
 	"author": "Edoardo Ranghieri",
-	"description": "UUIDv7 generator library for JavaScript",
+	"description": "UUIDv7 generator library for JavaScript that implements the RFC 9562 spec",
 	"private": false,
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
@@ -21,7 +21,8 @@
 	"keywords": [
 		"uuid",
 		"uuidv7",
-		"uuid generator"
+		"uuid generator",
+		"RFC 9562"
 	],
 	"license": "MIT",
 	"repository": {

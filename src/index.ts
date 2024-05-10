@@ -75,7 +75,7 @@ export class UUIDv7 {
 				// Otherwise, current timestamp is the same as the previous one.
 
 				// Method 2 - Monotonic Random
-				// https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis#monotonicity_counters
+				// https://datatracker.ietf.org/doc/html/rfc9562#monotonicity_counters
 
 				// Keep the same [rand_a] part by default.
 				randA = this.#lastRandA;
