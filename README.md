@@ -171,7 +171,7 @@ The final 62 bits of pseudo-random data to provide uniqueness as per [Section 6.
 
 ## Feedback
 
-If you found a bug in the implementation, please open a new [issue](https://github.com/TheEdoRan/uuidv7/issues/new).
+If you found a bug in the implementation, please open a new [issue](https://github.com/TheEdoRan/uuidv7-js/issues/new).
 
 ## Alternatives
 
