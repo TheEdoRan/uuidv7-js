@@ -4,7 +4,7 @@ import assert from "node:assert";
 import { test } from "node:test";
 import { UUIDv7, decodeOrThrowUUIDv7, decodeUUIDv7, encodeUUIDv7, uuidv7 } from ".";
 
-test("1_000_000 generated UUIDs should be valid and monotonic", () => {
+test("1_000_000 generated UUIDs with default timestamp should be valid and monotonic", () => {
 	const uuid = new UUIDv7();
 
 	uuid.genMany(1_000_000).forEach((id, idx, arr) => {
@@ -13,6 +13,16 @@ test("1_000_000 generated UUIDs should be valid and monotonic", () => {
 		if (idx > 0 && id <= arr[idx - 1]!) {
 			assert.fail(`UUIDs are not monotonic: ${id} <= ${arr[idx - 1]!}`);
 		}
+	});
+});
+
+test("1_000_000 generated UUIDs with custom timestamp should be valid and have the expected timestamp", () => {
+	const expectedTimestamp = 1716073376015;
+	const uuid = new UUIDv7();
+
+	uuid.genMany(1_000_000, expectedTimestamp).forEach((id) => {
+		assert.strictEqual(UUIDv7.isValid(id), true);
+		assert.strictEqual(UUIDv7.timestamp(id), expectedTimestamp);
 	});
 });
 
