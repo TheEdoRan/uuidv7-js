@@ -26,6 +26,7 @@ function genRandParts() {
 
 export class UUIDv7 {
 	#lastTimestamp: number = -1;
+	#lastCustomTimestamp: number = -1;
 	#lastRandA: number;
 	#lastRandB: bigint;
 	#lastUUID: bigint = -1n;
@@ -51,28 +52,38 @@ export class UUIDv7 {
 
 	/**
 	 * Generates a new UUIDv7.
+	 * @param {number} [customTimestamp] Custom timestamp in milliseconds. If not provided, it defaults to `Date.now()`.
 	 * @returns {string} UUIDv7
 	 */
-	gen() {
+	gen(customTimestamp?: number) {
+		const hasCustomTimestamp = typeof customTimestamp === "number";
+
+		if (hasCustomTimestamp && (customTimestamp < 0 || customTimestamp > 2 ** 48 - 1)) {
+			throw new Error("uuidv7: custom timestamp must be between 0 and 2 ** 48 - 1");
+		}
+
 		let uuid = this.#lastUUID;
 
 		while (this.#lastUUID >= uuid) {
-			const timestamp = Date.now();
+			const timestamp = hasCustomTimestamp ? customTimestamp : Date.now();
 
 			let randA: number;
 			let randB: bigint;
 
-			if (timestamp > this.#lastTimestamp) {
-				// If current timestamp is after the last stored one, generate new [rand_a] and [rand_b] parts.
+			// Generate new [rand_a] and [rand_b] parts if (or):
+			// - custom timestamp is provided and is different from the last custom stored one;
+			// - custom timestamp is not provided and current one is ahead of the last stored one.
+			if (hasCustomTimestamp ? timestamp !== this.#lastCustomTimestamp : timestamp > this.#lastTimestamp) {
 				const parts = genRandParts();
 				randA = parts.randA;
 				randB = parts.randB;
-			} else if (timestamp < this.#lastTimestamp) {
-				// If current timestamp is before the last stored one, it means that the system clock went
-				// backwards. So wait until it goes ahead before generating new UUIDs.
+			} else if (!hasCustomTimestamp && timestamp < this.#lastTimestamp) {
+				// If custom timestamp is not provided and current timestamp is behind the last stored one,
+				// it means that the system clock went backwards. So wait until it goes ahead before generating new UUIDs.
+				// If custom timestamp is provided, this doesn't matter, since timestamp is always fixed.
 				continue;
 			} else {
-				// Otherwise, current timestamp is the same as the previous one.
+				// Otherwise, current timestamp is the same as the previous stored one.
 
 				// Method 2 - Monotonic Random
 				// https://datatracker.ietf.org/doc/html/rfc9562#monotonicity_counters
@@ -88,9 +99,16 @@ export class UUIDv7 {
 					// this will use [rand_a] part as an additional counter, incrementing it by 1.
 					randA = randA + 1;
 
-					// If the [rand_a] part overflows its 12 bits, skip this loop iteration, since both
-					// [rand_a] and [rand_b] counters have overflowed.
+					// If the [rand_a] part overflows its 12 bits,
 					if (randA > 2 ** 12 - 1) {
+						// if custom timestamp is provided, throw an error, since the limit was reached for
+						// both randomly seeded counters.
+						if (hasCustomTimestamp) {
+							throw new Error("uuidv7: custom timestamp is too old");
+						}
+
+						// if custom timestamp is not provided, skip this loop iteration, since both
+						// [rand_a] and [rand_b] counters have overflowed.
 						continue;
 					}
 
@@ -114,26 +132,38 @@ export class UUIDv7 {
 			// [rand_b] primary randomly seeded counter - 62 bits
 			uuid = uuid | randB;
 
-			this.#lastTimestamp = timestamp;
 			this.#lastRandA = randA;
 			this.#lastRandB = randB;
+
+			// If custom timestamp is provided, always break the loop, since a valid UUIDv7 for this timestamp
+			// was generated.
+			if (hasCustomTimestamp) {
+				this.#lastCustomTimestamp = timestamp;
+				break;
+			} else {
+				this.#lastTimestamp = timestamp;
+			}
 		}
 
-		this.#lastUUID = uuid;
+		if (!hasCustomTimestamp) {
+			this.#lastUUID = uuid;
+		}
+
 		return addHyphens(uuid.toString(16).padStart(32, "0"));
 	}
 
 	/**
 	 * Generates an array of new UUIDv7.
 	 * @param amount Amount of UUIDs to generate
+	 * @param {number} [customTimestamp] Custom timestamp in milliseconds. If not provided, it defaults to `Date.now()`.
 	 * @returns {string[]} Array of UUIDv7s
 	 */
-	genMany(amount: number) {
+	genMany(amount: number, customTimestamp?: number) {
 		if (amount <= 0) {
 			throw new Error("uuidv7: generation amount must be greater than 0");
 		}
 
-		return Array.from({ length: amount }, () => this.gen());
+		return Array.from({ length: amount }, () => this.gen(customTimestamp));
 	}
 
 	/**
@@ -219,16 +249,17 @@ const defaultId = new UUIDv7();
 
 /**
  * Generates a new UUIDv7 using the default instance.
- * This is a shortand for `new UUIDv7().gen()`, without the need to create an instance.
+ * This is a shorthand for `new UUIDv7().gen()`, without the need to create an instance.
+ * @param {number} [customTimestamp] Custom timestamp in milliseconds. If not provided, it defaults to `Date.now()`.
  * @returns {string} UUIDv7
  */
-export function uuidv7() {
-	return defaultId.gen();
+export function uuidv7(customTimestamp?: number) {
+	return defaultId.gen(customTimestamp);
 }
 
 /**
  * Encodes UUIDv7 with the default `Base58` alphabet.
- * This is a shortand for `new UUIDv7().encode()`, without the need to create an instance.
+ * This is a shorthand for `new UUIDv7().encode()`, without the need to create an instance.
  * @param id UUIDv7
  * @returns {string} Encoded UUIDv7
  */
@@ -238,7 +269,7 @@ export function encodeUUIDv7(id: string) {
 
 /**
  * Decodes an encoded UUIDv7 with the default `Base58` alphabet. If the UUIDv7 is not valid, `null` is returned.
- * This is a shortand for `new UUIDv7().decode()`, without the need to create an instance.
+ * This is a shorthand for `new UUIDv7().decode()`, without the need to create an instance.
  * @param encodedId UUIDv7
  * @returns {string | null} Decoded UUIDv7 or `null` if invalid
  */
@@ -247,7 +278,7 @@ export function decodeUUIDv7(encodedId: string) {
 }
 /**
  * Decodes an encoded UUIDv7 with the default `Base58` alphabet. If the UUIDv7 is not valid, an error is thrown.
- * This is a shortand for `new UUIDv7().decodeOrThrow()`, without the need to create an instance.
+ * This is a shorthand for `new UUIDv7().decodeOrThrow()`, without the need to create an instance.
  * @param encodedId UUIDv7
  * @returns {string} Decoded UUIDv7
  */
