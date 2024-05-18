@@ -43,18 +43,18 @@ Creates a new `UUIDv7` instance. By default it uses the [Base58](https://www.cs.
 #### `gen`
 
 ```typescript
-gen() => string
+gen(customTimestamp?: number) => string
 ```
 
-Generates a new UUIDv7.
+Generates a new UUIDv7. You can provide a custom timestamp to be used instead of the current one.
 
 #### `genMany`
 
 ```typescript
-genMany(amount: number) => string[]
+genMany(amount: number, customTimestamp?: number) => string[]
 ```
 
-Generates a custom amount of UUIDv7s.
+Generates a custom amount of UUIDv7s. You can provide a custom timestamp to be used instead of the current one.
 
 #### `encode`
 
@@ -128,6 +128,11 @@ This library implements the [RFC 9562](https://datatracker.ietf.org/doc/html/rfc
   - if both counters overflow their bit sizes, the generation function waits for the next millisecond to return a UUIDv7 with newly generated random parts.
 
 This approach follows the [method 2](https://datatracker.ietf.org/doc/html/rfc9562#monotonicity_counters) of the "Monotonicity and Counters" section of the spec. It guarantees monotonicity and uniqueness per instance, and always keeps timestamp the same as `Date.now()` value.
+
+If you provide a custom timestamp, it will be used instead of the current one. Generation works differently in this case:
+
+- if the custom timestamp is different from the last custom stored one, it generates new `rand_a` and `rand_b` parts;
+- if the custom timestamp is the same as the last custom stored one, it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order, just like the normal generation method. If both `rand_a` and `rand_b` overflow, though, the generator throws an error informing that a valid UUIDv7 cannot be generated with the provided timestamp. This is an extremely rare case.
 
 ## Field and Bit Layout
 
