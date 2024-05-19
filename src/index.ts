@@ -37,11 +37,11 @@ export class UUIDv7 {
 	constructor(opts?: { encodeAlphabet?: string }) {
 		if (opts?.encodeAlphabet) {
 			if (opts.encodeAlphabet.length < 16 || opts.encodeAlphabet.length > 64) {
-				throw new Error("uuidv7: encode alphabet must be between 16 and 64 characters long");
+				throw new Error("uuidv7 error: encode alphabet must be between 16 and 64 characters long");
 			}
 
 			if (new Set(opts.encodeAlphabet).size !== opts.encodeAlphabet.length) {
-				throw new Error("uuidv7: encode alphabet must not contain duplicate characters");
+				throw new Error("uuidv7 error: encode alphabet must not contain duplicate characters");
 			}
 		}
 
@@ -57,7 +57,7 @@ export class UUIDv7 {
 		const hasCustomTimestamp = typeof customTimestamp === "number";
 
 		if (hasCustomTimestamp && (customTimestamp < 0 || customTimestamp > 2 ** 48 - 1)) {
-			throw new Error("uuidv7 gen: custom timestamp must be between 0 and 2 ** 48 - 1");
+			throw new Error("uuidv7 gen error: custom timestamp must be between 0 and 2 ** 48 - 1");
 		}
 
 		let uuid = this.#lastUUID;
@@ -102,7 +102,7 @@ export class UUIDv7 {
 						// if custom timestamp is provided, throw an error, since the limit was reached for
 						// both randomly seeded counters.
 						if (hasCustomTimestamp) {
-							throw new Error("uuidv7 gen: cannot generate a UUIDv7 with this timestamp, counters limit reached");
+							throw new Error("uuidv7 gen error: cannot generate a UUIDv7 with this timestamp, counters limit reached");
 						}
 
 						// if custom timestamp is not provided, skip this loop iteration, since both
@@ -158,7 +158,7 @@ export class UUIDv7 {
 	 */
 	genMany(amount: number, customTimestamp?: number) {
 		if (amount <= 0) {
-			throw new Error("uuidv7 genMany: generation amount must be greater than 0");
+			throw new Error("uuidv7 genMany error: generation amount must be greater than 0");
 		}
 
 		return Array.from({ length: amount }, () => this.gen(customTimestamp));
@@ -170,16 +170,24 @@ export class UUIDv7 {
 	 * @returns {string} Encoded UUIDv7
 	 */
 	encode(id: string) {
-		let n = BigInt("0x" + id.replace(/-/g, ""));
-		let encoded = "";
+		try {
+			if (!UUIDv7.isValid(id)) {
+				throw new Error(`[${id}] is not a valid UUIDv7`);
+			}
 
-		while (n > 0n) {
-			const charIdx = this.#encodeAlphabet[Number(n % BigInt(this.#encodeAlphabet.length))];
-			encoded = charIdx + encoded;
-			n /= BigInt(this.#encodeAlphabet.length);
+			let n = BigInt("0x" + id.replace(/-/g, ""));
+			let encoded = "";
+
+			while (n > 0n) {
+				const charIdx = this.#encodeAlphabet[Number(n % BigInt(this.#encodeAlphabet.length))];
+				encoded = charIdx + encoded;
+				n /= BigInt(this.#encodeAlphabet.length);
+			}
+
+			return encoded;
+		} catch (e) {
+			throw new Error(`uuidv7 encode error: ${e instanceof Error ? e.message : e}`);
 		}
-
-		return encoded;
 	}
 
 	/**
