@@ -1,5 +1,3 @@
-import baseX from "base-x";
-
 function addHyphens(id: string) {
 	return (
 		id.substring(0, 8) +
@@ -30,13 +28,13 @@ export class UUIDv7 {
 	#lastRandA: number;
 	#lastRandB: bigint;
 	#lastUUID: bigint = -1n;
-	#encoder: baseX.BaseConverter;
+	#encodeAlphabet: string;
 
 	/**
 	 * Generates a new `UUIDv7` instance.
 	 * @param encodeAlphabet Alphabet used for encoding. Defaults to [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2) alphabet. 16-64 characters.
 	 */
-	constructor(opts?: { encodeAlphabet: string }) {
+	constructor(opts?: { encodeAlphabet?: string }) {
 		if (opts?.encodeAlphabet) {
 			if (opts.encodeAlphabet.length < 16 || opts.encodeAlphabet.length > 64) {
 				throw new Error("uuidv7: encode alphabet must be between 16 and 64 characters long");
@@ -47,7 +45,7 @@ export class UUIDv7 {
 			}
 		}
 
-		this.#encoder = baseX(opts?.encodeAlphabet ?? "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz");
+		this.#encodeAlphabet = opts?.encodeAlphabet ?? "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 	}
 
 	/**
@@ -59,7 +57,7 @@ export class UUIDv7 {
 		const hasCustomTimestamp = typeof customTimestamp === "number";
 
 		if (hasCustomTimestamp && (customTimestamp < 0 || customTimestamp > 2 ** 48 - 1)) {
-			throw new Error("uuidv7: custom timestamp must be between 0 and 2 ** 48 - 1");
+			throw new Error("uuidv7 gen: custom timestamp must be between 0 and 2 ** 48 - 1");
 		}
 
 		let uuid = this.#lastUUID;
@@ -104,7 +102,7 @@ export class UUIDv7 {
 						// if custom timestamp is provided, throw an error, since the limit was reached for
 						// both randomly seeded counters.
 						if (hasCustomTimestamp) {
-							throw new Error("uuidv7: custom timestamp is too old");
+							throw new Error("uuidv7 gen: cannot generate a UUIDv7 with this timestamp, counters limit reached");
 						}
 
 						// if custom timestamp is not provided, skip this loop iteration, since both
@@ -160,7 +158,7 @@ export class UUIDv7 {
 	 */
 	genMany(amount: number, customTimestamp?: number) {
 		if (amount <= 0) {
-			throw new Error("uuidv7: generation amount must be greater than 0");
+			throw new Error("uuidv7 genMany: generation amount must be greater than 0");
 		}
 
 		return Array.from({ length: amount }, () => this.gen(customTimestamp));
@@ -172,7 +170,16 @@ export class UUIDv7 {
 	 * @returns {string} Encoded UUIDv7
 	 */
 	encode(id: string) {
-		return this.#encoder.encode(Buffer.from(id.replace(/-/g, ""), "hex"));
+		let n = BigInt("0x" + id.replace(/-/g, ""));
+		let encoded = "";
+
+		while (n > 0n) {
+			const charIdx = this.#encodeAlphabet[Number(n % BigInt(this.#encodeAlphabet.length))];
+			encoded = charIdx + encoded;
+			n /= BigInt(this.#encodeAlphabet.length);
+		}
+
+		return encoded;
 	}
 
 	/**
@@ -182,13 +189,7 @@ export class UUIDv7 {
 	 */
 	decode(encodedId: string) {
 		try {
-			const decoded = addHyphens(Buffer.from(this.#encoder.decode(encodedId)).toString("hex"));
-
-			if (!UUIDv7.isValid(decoded)) {
-				return null;
-			}
-
-			return decoded;
+			return this.decodeOrThrow(encodedId);
 		} catch {
 			return null;
 		}
@@ -200,10 +201,22 @@ export class UUIDv7 {
 	 * @returns {string} Decoded UUIDv7
 	 */
 	decodeOrThrow(encodedId: string) {
-		const decoded = this.decode(encodedId);
+		let n = 0n;
 
-		if (!decoded) {
-			throw new Error(`uuidv7: encoded UUID is not valid: ${encodedId}`);
+		for (let i = 0; i < encodedId.length; i++) {
+			const charIdx = this.#encodeAlphabet.indexOf(encodedId[i]!);
+
+			if (charIdx < 0) {
+				throw new Error(`uuidv7 decode error: invalid character in id [${encodedId}] at index ${i}: "${encodedId[i]}"`);
+			}
+
+			n = n * BigInt(this.#encodeAlphabet.length) + BigInt(charIdx);
+		}
+
+		const decoded = addHyphens(n.toString(16).padStart(32, "0"));
+
+		if (!UUIDv7.isValid(decoded)) {
+			throw new Error(`uuidv7 decode error: cannot decode [${encodedId}] into a valid UUIDv7`);
 		}
 
 		return decoded;

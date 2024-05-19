@@ -1,6 +1,6 @@
 # [uuidv7-js](https://github.com/TheEdoRan/uuidv7-js)
 
-UUIDv7 generator library for JavaScript that implements the [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562) spec.
+UUIDv7 generator library for JavaScript, [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562) compliant. Supports encoding/decoding UUIDs to custom alphabets.
 
 ## Installation
 
@@ -33,7 +33,7 @@ const decoded = decodeUUIDv7(encoded); // // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b
 ## Create a new instance
 
 ```typescript
-const uuid = new UUIDv7(opts?: { encodeAlphabet: string })
+const uuid = new UUIDv7(opts?: { encodeAlphabet?: string })
 ```
 
 Creates a new `UUIDv7` instance. By default it uses the [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2) alphabet to `encode` and `decode` UUIDs, but you can pass a custom alphabet (16-64 characters).

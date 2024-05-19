@@ -2,7 +2,7 @@
 	"name": "uuidv7-js",
 	"version": "0.0.0-development",
 	"author": "Edoardo Ranghieri",
-	"description": "UUIDv7 generator library for JavaScript that implements the RFC 9562 spec",
+	"description": "UUIDv7 generator library for JavaScript, RFC 9562 compliant. Supports encoding/decoding UUIDs to custom alphabets.",
 	"private": false,
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
@@ -54,8 +54,5 @@
 		"tsx": "^4.7.2",
 		"typescript": "^5.4.5",
 		"typescript-eslint": "^7.7.1"
-	},
-	"dependencies": {
-		"base-x": "^4.0.0"
 	}
 }
