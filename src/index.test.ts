@@ -26,6 +26,12 @@ test("1_000_000 generated UUIDs with custom timestamp should be valid and have t
 	});
 });
 
+test("uppercase UUID should be valid", () => {
+	const uuid = new UUIDv7();
+	const uppercase = uuid.gen().toUpperCase();
+	assert.strictEqual(UUIDv7.isValid(uppercase), true);
+});
+
 test("timestamp and date functions should return expected values", () => {
 	const id = "018f0760-4a87-737d-9889-b832d3dcce74";
 	const expectedTimestamp = 1713815702151;

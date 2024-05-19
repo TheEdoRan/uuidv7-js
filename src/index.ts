@@ -228,7 +228,7 @@ export class UUIDv7 {
 	 * @returns {boolean} UUIDv7 validity
 	 */
 	static isValid(id: string) {
-		return /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id);
+		return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(id);
 	}
 
 	/**
