@@ -94,24 +94,24 @@ export class UUIDv7 {
 
 				// In the rare case that [rand_b] overflows its 62 bits after the increment,
 				if (randB > 2n ** 62n - 1n) {
+					// When [rand_b] overflows its 62 bits, always generate a new random part for it.
+					randB = genRandParts().randB;
+
 					// this will use [rand_a] part as an additional counter, incrementing it by 1.
 					randA = randA + 1;
 
 					// If the [rand_a] part overflows its 12 bits,
 					if (randA > 2 ** 12 - 1) {
-						// if custom timestamp is provided, throw an error, since the limit was reached for
-						// both randomly seeded counters.
+						// if custom timestamp is provided, generate new [rand_a] part.
+						// This breaks monotonicity but keeps custom timestamp the same and generates a new ID.
 						if (hasCustomTimestamp) {
-							throw new Error("uuidv7 gen error: cannot generate a UUIDv7 with this timestamp, counters limit reached");
+							randA = genRandParts().randA;
+						} else {
+							// if custom timestamp is not provided, skip this loop iteration, since both
+							// [rand_a] and [rand_b] counters have overflowed. This ensures monotonicity per instance.
+							continue;
 						}
-
-						// if custom timestamp is not provided, skip this loop iteration, since both
-						// [rand_a] and [rand_b] counters have overflowed.
-						continue;
 					}
-
-					// When [rand_b] overflows its 62 bits, always generate a new random part for it.
-					randB = genRandParts().randB;
 				}
 			}
 
