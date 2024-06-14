@@ -132,7 +132,7 @@ This approach follows the [method 2](https://datatracker.ietf.org/doc/html/rfc95
 If you provide a custom timestamp, it will be used instead of the current one. Generation works differently in this case:
 
 - if the custom timestamp is different from the last custom stored one, it generates new `rand_a` and `rand_b` parts;
-- if the custom timestamp is the same as the last custom stored one, it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order, just like the normal generation method. If both `rand_a` and `rand_b` overflow, though, the generator throws an error informing that a valid UUIDv7 cannot be generated with the provided timestamp. This is an extremely rare case.
+- if the custom timestamp is the same as the last custom stored one, it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order, just like the normal generation method. If both `rand_a` and `rand_b` overflow, though, the generator creates new `rand_a` and `rand_b` parts. This breaks monotonicity per instance with custom timestamp, but ensures that a valid UUIDv7 is always returned. Keep in mind that this is an extremely rare case and should really never happen.
 
 ## Field and Bit Layout
 
