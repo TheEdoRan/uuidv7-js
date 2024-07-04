@@ -1,34 +1,13 @@
-function addHyphens(id: string) {
-	return (
-		id.substring(0, 8) +
-		"-" +
-		id.substring(8, 12) +
-		"-" +
-		id.substring(12, 16) +
-		"-" +
-		id.substring(16, 20) +
-		"-" +
-		id.substring(20)
-	);
-}
-
-// Generates the 12 [rand_a] and 62 bits [rand_b] parts in number and bigint formats.
-function genRandParts() {
-	const v4 = crypto.randomUUID();
-
-	return {
-		randA: parseInt(v4.slice(15, 18), 16),
-		randB: BigInt("0x" + v4.replace(/-/g, "")) & ((1n << 62n) - 1n),
-	};
-}
+import { TimestampUUIDv7 } from "./timestamp-uuid";
+import { addHyphens, genRandParts } from "./utils";
 
 export class UUIDv7 {
 	#lastTimestamp: number = -1;
-	#lastCustomTimestamp: number = -1;
 	#lastRandA: number;
 	#lastRandB: bigint;
 	#lastUUID: bigint = -1n;
 	#encodeAlphabet: string;
+	#timestampUUID: TimestampUUIDv7;
 
 	/**
 	 * Generates a new `UUIDv7` instance.
@@ -46,6 +25,7 @@ export class UUIDv7 {
 		}
 
 		this.#encodeAlphabet = opts?.encodeAlphabet ?? "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+		this.#timestampUUID = new TimestampUUIDv7();
 	}
 
 	/**
@@ -56,29 +36,25 @@ export class UUIDv7 {
 	gen(customTimestamp?: number) {
 		const hasCustomTimestamp = typeof customTimestamp === "number";
 
-		if (hasCustomTimestamp && (customTimestamp < 0 || customTimestamp > 2 ** 48 - 1)) {
-			throw new Error("uuidv7 gen error: custom timestamp must be between 0 and 2 ** 48 - 1");
+		if (hasCustomTimestamp) {
+			return this.#timestampUUID.gen(customTimestamp);
 		}
 
 		let uuid = this.#lastUUID;
 
 		while (this.#lastUUID >= uuid) {
-			const timestamp = hasCustomTimestamp ? customTimestamp : Date.now();
+			const timestamp = Date.now();
 
 			let randA: number;
 			let randB: bigint;
 
-			// Generate new [rand_a] and [rand_b] parts if (or):
-			// - custom timestamp is provided and is different from the last custom stored one;
-			// - custom timestamp is not provided and current one is ahead of the last stored one.
-			if (hasCustomTimestamp ? timestamp !== this.#lastCustomTimestamp : timestamp > this.#lastTimestamp) {
+			// Generate new [rand_a] and [rand_b] parts if current timestamp one is ahead of the last stored one.
+			if (timestamp > this.#lastTimestamp) {
 				const parts = genRandParts();
 				randA = parts.randA;
 				randB = parts.randB;
-			} else if (!hasCustomTimestamp && timestamp < this.#lastTimestamp) {
-				// If custom timestamp is not provided and current timestamp is behind the last stored one,
-				// it means that the system clock went backwards. So wait until it goes ahead before generating new UUIDs.
-				// If custom timestamp is provided, this doesn't matter, since timestamp is always fixed.
+			} else if (timestamp < this.#lastTimestamp) {
+				// The system clock went backwards. So wait until it goes ahead before generating new UUIDs.
 				continue;
 			} else {
 				// Otherwise, current timestamp is the same as the previous stored one.
@@ -101,16 +77,10 @@ export class UUIDv7 {
 					randA = randA + 1;
 
 					// If the [rand_a] part overflows its 12 bits,
+					// Skip this loop iteration, since both [rand_a] and [rand_b] counters have overflowed.
+					// This ensures monotonicity per instance.
 					if (randA > 2 ** 12 - 1) {
-						// if custom timestamp is provided, generate new [rand_a] part.
-						// This breaks monotonicity but keeps custom timestamp the same and generates a new ID.
-						if (hasCustomTimestamp) {
-							randA = genRandParts().randA;
-						} else {
-							// if custom timestamp is not provided, skip this loop iteration, since both
-							// [rand_a] and [rand_b] counters have overflowed. This ensures monotonicity per instance.
-							continue;
-						}
+						continue;
 					}
 				}
 			}
@@ -133,19 +103,10 @@ export class UUIDv7 {
 			this.#lastRandA = randA;
 			this.#lastRandB = randB;
 
-			// If custom timestamp is provided, always break the loop, since a valid UUIDv7 for this timestamp
-			// was generated.
-			if (hasCustomTimestamp) {
-				this.#lastCustomTimestamp = timestamp;
-				break;
-			} else {
-				this.#lastTimestamp = timestamp;
-			}
+			this.#lastTimestamp = timestamp;
 		}
 
-		if (!hasCustomTimestamp) {
-			this.#lastUUID = uuid;
-		}
+		this.#lastUUID = uuid;
 
 		return addHyphens(uuid.toString(16).padStart(32, "0"));
 	}
