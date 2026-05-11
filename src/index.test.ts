@@ -200,4 +200,3 @@ test("burst generation within a single millisecond should be monotonic", () => {
 		}
 	}
 });
-

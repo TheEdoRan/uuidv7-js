@@ -1,5 +1,4 @@
-export const VALIDATION_RE =
-	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+export const VALIDATION_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
 
 // Precomputed RFC 9562 fixed bits, hoisted out of the hot path.
 const VERSION_BITS = 0b0111n << 76n;
@@ -18,18 +17,9 @@ export function parseTimestamp(id: string): number | null {
 // BigInt-to-hex conversion is faster in V8 than four separate Number-to-hex
 // conversions + padStart calls (measured), so we stay on the BigInt path here.
 export function assemble(timestamp: number, randA: number, randB: bigint): string {
-	const uuid =
-		(BigInt(timestamp) << 80n) | VERSION_BITS | (BigInt(randA) << 64n) | VARIANT_BITS | randB;
+	const uuid = (BigInt(timestamp) << 80n) | VERSION_BITS | (BigInt(randA) << 64n) | VARIANT_BITS | randB;
 	const hex = uuid.toString(16).padStart(32, "0");
 	return (
-		hex.slice(0, 8) +
-		"-" +
-		hex.slice(8, 12) +
-		"-" +
-		hex.slice(12, 16) +
-		"-" +
-		hex.slice(16, 20) +
-		"-" +
-		hex.slice(20)
+		hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) + "-" + hex.slice(16, 20) + "-" + hex.slice(20)
 	);
 }

@@ -9,8 +9,7 @@ const MAX_RAND_B = (1n << 62n) - 1n;
 
 // Module-level regex; the inline literal pattern in `static isValid` below
 // avoids any cross-module property access in the hottest validation path.
-const VALIDATION_RE =
-	/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+const VALIDATION_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
 
 export class UUIDv7 {
 	#state: GenState = createState();

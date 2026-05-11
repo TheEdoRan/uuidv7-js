@@ -72,9 +72,7 @@ export function decodeOrThrow(codec: Codec, encoded: string): string {
 		// and ASCII not in the alphabet. Either way: invalid.
 		const v = code < 128 ? lookup[code]! : 0;
 		if (v === 0) {
-			throw new Error(
-				`uuidv7 decode error: invalid character in id [${encoded}] at index ${i}: "${encoded[i]}"`,
-			);
+			throw new Error(`uuidv7 decode error: invalid character in id [${encoded}] at index ${i}: "${encoded[i]}"`);
 		}
 		n = n * base + BigInt(v - 1);
 	}
@@ -86,15 +84,7 @@ export function decodeOrThrow(codec: Codec, encoded: string): string {
 		throw new Error(`uuidv7 decode error: cannot decode [${encoded}] into a valid UUIDv7`);
 	}
 	const id =
-		hex.slice(0, 8) +
-		"-" +
-		hex.slice(8, 12) +
-		"-" +
-		hex.slice(12, 16) +
-		"-" +
-		hex.slice(16, 20) +
-		"-" +
-		hex.slice(20);
+		hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) + "-" + hex.slice(16, 20) + "-" + hex.slice(20);
 
 	if (!VALIDATION_RE.test(id)) {
 		throw new Error(`uuidv7 decode error: cannot decode [${encoded}] into a valid UUIDv7`);
