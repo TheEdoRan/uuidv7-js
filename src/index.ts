@@ -147,7 +147,7 @@ export class UUIDv7 {
 
 			return encoded;
 		} catch (e) {
-			throw new Error(`uuidv7 encode error: ${e instanceof Error ? e.message : e}`);
+			throw new Error(`uuidv7 encode error: ${e instanceof Error ? e.message : e}`, { cause: e });
 		}
 	}
 
