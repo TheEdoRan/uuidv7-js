@@ -33,10 +33,16 @@ const decoded = decodeUUIDv7(encoded); // // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b
 ## Create a new instance
 
 ```typescript
-const uuid = new UUIDv7(opts?: { encodeAlphabet?: string })
+const uuid = new UUIDv7(opts?: {
+  encodeAlphabet?: string;
+  blockOnBackwardsClock?: boolean;
+})
 ```
 
-Creates a new `UUIDv7` instance. By default it uses the [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2) alphabet to `encode` and `decode` UUIDs, but you can pass a custom ASCII alphabet (16-64 characters, no duplicates).
+Creates a new `UUIDv7` instance.
+
+- `encodeAlphabet` — alphabet used for `encode` / `decode`. Defaults to the [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2) alphabet. ASCII, 16-64 characters, no duplicates.
+- `blockOnBackwardsClock` — when `true`, `gen()` synchronously busy-waits if the system clock goes backwards relative to the last observed timestamp, until the clock catches up. The embedded UUID timestamp will always reflect the actual wall clock at the cost of blocking the event loop for the duration of any backwards skew. Defaults to `false` (timestamp is pinned and the monotonic counter advances). Has no effect on the custom-timestamp path. See [Implementation details](#implementation-details).
 
 ### Instance methods
 
@@ -124,7 +130,7 @@ This library implements the [RFC 9562](https://datatracker.ietf.org/doc/html/rfc
 For the default (runtime-clock) generation path:
 
 - if the current timestamp is ahead of the last stored one, new `rand_a` and `rand_b` parts are generated;
-- if the current timestamp is **behind** the last stored one (clock skew, NTP step-back, VM time-warp), the timestamp is pinned to the last stored value and the monotonic counter advances. The library never busy-waits on a backwards clock;
+- if the current timestamp is **behind** the last stored one (clock skew, NTP step-back, VM time-warp), the timestamp is pinned to the last stored value and the monotonic counter advances. The library never busy-waits on a backwards clock by default. Opt into the v1 behavior with `new UUIDv7({ blockOnBackwardsClock: true })` — `gen()` will then synchronously wait until the wall clock catches up, at the cost of blocking the event loop for the duration of the skew;
 - if the current timestamp is equal to the last stored one, `rand_b` is incremented by a random integer in `[1, 2^32]` as the primary counter. When `rand_b` overflows its 62 bits, `rand_a` is incremented by 1 as a secondary counter and `rand_b` is freshly seeded. When **both** counters overflow within one millisecond — extraordinarily rare — the timestamp is advanced by 1ms and the random parts are regenerated. RFC 9562 §6.2 permits this sub-millisecond drift.
 
 For the **custom-timestamp** generation path:

@@ -128,7 +128,30 @@ test("invalid encoded UUIDs should throw error when decoded with `decodeOrThrow`
 	expect(() => decodeOrThrowUUIDv7(invalidEncoded2)).toThrow();
 });
 
-test("gen() should not spin when the clock goes backwards", () => {
+test("gen() with blockOnBackwardsClock: true should wait for the clock to catch up", () => {
+	const uuid = new UUIDv7({ blockOnBackwardsClock: true });
+	const baseTime = 1_700_000_000_000;
+
+	const nowSpy = vi.spyOn(Date, "now").mockReturnValue(baseTime);
+	const first = uuid.gen();
+	expect(UUIDv7.timestamp(first)).toBe(baseTime);
+
+	// Simulate clock skew: Date.now returns earlier value the first few reads,
+	// then catches up. The generator must spin until catch-up, then emit a UUID
+	// whose embedded timestamp equals the caught-up value (not the pinned one).
+	let reads = 0;
+	nowSpy.mockImplementation(() => {
+		reads++;
+		return reads < 5 ? baseTime - 100 : baseTime + 1;
+	});
+
+	const second = uuid.gen();
+	expect(reads).toBeGreaterThanOrEqual(5);
+	expect(UUIDv7.timestamp(second)).toBe(baseTime + 1);
+	expect(second > first).toBe(true);
+});
+
+test("gen() (default) should not spin when the clock goes backwards", () => {
 	const uuid = new UUIDv7();
 	const baseTime = 1_700_000_000_000;
 

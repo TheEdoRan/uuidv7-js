@@ -16,15 +16,25 @@ export class UUIDv7 {
 	#state: GenState = createState();
 	#customState: GenState = createState();
 	#codec: Codec;
+	#blockOnBackwardsClock: boolean;
 
 	/**
 	 * Generates a new `UUIDv7` instance.
 	 * @param encodeAlphabet Alphabet used for encoding. Defaults to the
 	 * [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2)
 	 * alphabet. ASCII, 16-64 characters, no duplicates.
+	 * @param blockOnBackwardsClock When `true`, `gen()` synchronously busy-waits
+	 * when the system clock goes backwards relative to the last observed
+	 * timestamp, until the clock catches up. Embedded UUID timestamps will
+	 * always reflect the actual wall clock at the cost of blocking the event
+	 * loop for the duration of any backwards skew. When `false` (default), the
+	 * timestamp is pinned to the last observed value and the monotonic counter
+	 * advances — RFC 9562 §6.2 permits both strategies. Has no effect on the
+	 * custom-timestamp path.
 	 */
-	constructor(opts?: { encodeAlphabet?: string }) {
+	constructor(opts?: { encodeAlphabet?: string; blockOnBackwardsClock?: boolean }) {
 		this.#codec = createCodec(opts?.encodeAlphabet ?? DEFAULT_ALPHABET);
+		this.#blockOnBackwardsClock = opts?.blockOnBackwardsClock ?? false;
 	}
 
 	/**
@@ -70,10 +80,20 @@ export class UUIDv7 {
 		}
 
 		const s = this.#state;
-		const now = Date.now();
-		// Pin to lastTimestamp if the clock went backwards. RFC 9562 §6.2 prefers
-		// the counter path over blocking; this avoids the v1 spin-loop hazard.
-		const target = now >= s.lastTimestamp ? now : s.lastTimestamp;
+		let target = Date.now();
+		if (target < s.lastTimestamp) {
+			if (this.#blockOnBackwardsClock) {
+				// Opt-in: busy-wait until the clock catches up. Embedded timestamp
+				// will match wall-clock at the cost of blocking the event loop.
+				do {
+					target = Date.now();
+				} while (target < s.lastTimestamp);
+			} else {
+				// Default: pin to lastTimestamp and let the counter advance.
+				// RFC 9562 §6.2 permits sub-millisecond drift for monotonicity.
+				target = s.lastTimestamp;
+			}
+		}
 
 		if (target !== s.lastTimestamp) {
 			fillRandomParts(s);
