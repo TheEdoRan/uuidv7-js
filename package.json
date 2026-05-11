@@ -1,59 +1,66 @@
 {
 	"name": "uuidv7-js",
-	"version": "0.0.0-development",
-	"author": "Edoardo Ranghieri",
+	"version": "2.0.0",
 	"description": "UUIDv7 generator library for JavaScript, RFC 9562 compliant. Supports encoding/decoding UUIDs to custom alphabets.",
+	"author": "Edoardo Ranghieri",
+	"license": "MIT",
 	"private": false,
-	"main": "dist/index.js",
-	"module": "dist/index.mjs",
-	"types": "dist/index.d.ts",
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
+		}
+	},
 	"files": [
-		"dist/**",
-		"package.json"
+		"dist",
+		"package.json",
+		"README.md"
 	],
 	"scripts": {
-		"prepare": "is-ci || husky",
-		"lint": "tsc && prettier --write . && eslint .",
-		"build": "tsup ./src/index.ts --format cjs,esm --dts",
-		"test": "node --import tsx --test ./src/*.test.ts",
-		"deploy": "semantic-release"
+		"lint": "tsc && oxlint --type-aware .",
+		"fmt": "oxfmt",
+		"fmt:check": "oxfmt --check",
+		"build": "tsdown",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"changeset": "changeset",
+		"version-package": "changeset version",
+		"release": "changeset publish"
 	},
-	"keywords": [
-		"uuid",
-		"uuidv7",
-		"uuid generator",
-		"RFC 9562"
-	],
-	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/TheEdoRan/uuidv7-js.git"
+		"url": "https://github.com/TheEdoRan/uuidv7-js.git"
 	},
 	"publishConfig": {
 		"access": "public"
 	},
-	"config": {
-		"commitizen": {
-			"path": "./node_modules/cz-conventional-changelog"
-		}
-	},
+	"keywords": [
+		"uuid",
+		"uuidv7",
+		"rfc9562",
+		"generator",
+		"id"
+	],
+	"packageManager": "pnpm@11.0.9",
 	"devDependencies": {
-		"@commitlint/cli": "^19.3.0",
-		"@commitlint/config-conventional": "^19.2.2",
-		"@eslint/js": "^9.1.1",
-		"@types/node": "^20.12.7",
-		"commitizen": "^4.3.0",
-		"cz-conventional-changelog": "^3.3.0",
-		"eslint": "^8.57.0",
-		"eslint-config-prettier": "^9.1.0",
-		"husky": "^9.0.11",
-		"is-ci": "^3.0.1",
-		"prettier": "^3.2.5",
-		"semantic-release": "^23.0.8",
-		"tsup": "^8.0.2",
-		"tsx": "^4.7.2",
-		"typescript": "^5.4.5",
-		"typescript-eslint": "^7.7.1"
-	},
-	"packageManager": "pnpm@9.3.0+sha512.ee7b93e0c2bd11409c6424f92b866f31d3ea1bef5fbe47d3c7500cdc3c9668833d2e55681ad66df5b640c61fa9dc25d546efa54d76d7f8bf54b13614ac293631"
+		"@changesets/changelog-github": "^0.6.0",
+		"@changesets/cli": "^2.31.0",
+		"@types/node": "^24",
+		"oxfmt": "^0.48.0",
+		"oxlint": "^1.63.0",
+		"oxlint-tsgolint": "^0.22.1",
+		"tsdown": "^0.21.0",
+		"typescript": "^6",
+		"vitest": "^4.1.4"
+	}
 }

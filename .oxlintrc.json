@@ -1,0 +1,17 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"ignorePatterns": ["node_modules/**", "dist/**", "**/*.tsbuildinfo"],
+	"options": {
+		"typeAware": true,
+		"typeCheck": true
+	},
+	"plugins": ["oxc", "eslint", "unicorn", "typescript"],
+	"categories": {
+		"correctness": "error",
+		"suspicious": "warn"
+	},
+	"rules": {
+		"typescript/consistent-type-imports": "error",
+		"typescript/no-unsafe-type-assertion": "off"
+	}
+}

@@ -1,16 +1,15 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
-		"module": "CommonJS",
-		"lib": [],
+		"module": "ESNext",
+		"lib": ["ES2022"],
+		"types": ["node"],
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"outDir": "./dist",
-		"moduleResolution": "node",
+		"moduleResolution": "Bundler",
 		"removeComments": false,
 		"strict": true,
-		"strictPropertyInitialization": false,
-		"useUnknownInCatchVariables": false,
 		"forceConsistentCasingInFileNames": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
@@ -25,5 +24,5 @@
 		"noEmit": true
 	},
 	"exclude": ["node_modules"],
-	"include": ["./src/**/*.ts"]
+	"include": ["tsdown.config.ts", "vitest.config.ts", "./src/**/*.ts"]
 }

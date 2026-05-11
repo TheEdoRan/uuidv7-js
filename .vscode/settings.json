@@ -1,10 +1,25 @@
 {
-	"typescript.tsdk": "node_modules/typescript/lib",
-	"prettier.enable": true,
-	"eslint.validate": ["typescript"],
-	"eslint.experimental.useFlatConfig": true,
 	"editor.codeActionsOnSave": {
-		"source.organizeImports": "explicit",
-		"source.fixAll.eslint": "explicit"
+		"source.fixAll.oxc": "always",
+		"source.removeUnusedImports": "explicit"
+	},
+	"prettier.enable": false,
+	"editor.defaultFormatter": "oxc.oxc-vscode",
+	"editor.formatOnSave": true,
+	"oxc.fmt.configPath": ".oxfmtrc.json",
+	"oxc.typeAware": true,
+	"editor.rulers": [120],
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"[markdown]": {
+		"editor.formatOnSave": false
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "oxc.oxc-vscode"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "oxc.oxc-vscode"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "oxc.oxc-vscode"
 	}
 }

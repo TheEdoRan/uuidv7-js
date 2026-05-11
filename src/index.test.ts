@@ -1,17 +1,18 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-import assert from "node:assert";
-import { test } from "node:test";
+import { afterEach, expect, test, vi } from "vitest";
 import { UUIDv7, decodeOrThrowUUIDv7, decodeUUIDv7, encodeUUIDv7, uuidv7 } from ".";
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
 
 test("1_000_000 generated UUIDs with default timestamp should be valid and monotonic", () => {
 	const uuid = new UUIDv7();
 
 	uuid.genMany(1_000_000).forEach((id, idx, arr) => {
-		assert.strictEqual(UUIDv7.isValid(id), true);
+		expect(UUIDv7.isValid(id)).toBe(true);
 
 		if (idx > 0 && id <= arr[idx - 1]!) {
-			assert.fail(`UUIDs are not monotonic: ${id} <= ${arr[idx - 1]!}`);
+			throw new Error(`UUIDs are not monotonic: ${id} <= ${arr[idx - 1]!}`);
 		}
 	});
 });
@@ -21,15 +22,15 @@ test("1_000_000 generated UUIDs with custom timestamp should be valid and have t
 	const uuid = new UUIDv7();
 
 	uuid.genMany(1_000_000, expectedTimestamp).forEach((id) => {
-		assert.strictEqual(UUIDv7.isValid(id), true);
-		assert.strictEqual(UUIDv7.timestamp(id), expectedTimestamp);
+		expect(UUIDv7.isValid(id)).toBe(true);
+		expect(UUIDv7.timestamp(id)).toBe(expectedTimestamp);
 	});
 });
 
 test("uppercase UUID should be valid", () => {
 	const uuid = new UUIDv7();
 	const uppercase = uuid.gen().toUpperCase();
-	assert.strictEqual(UUIDv7.isValid(uppercase), true);
+	expect(UUIDv7.isValid(uppercase)).toBe(true);
 });
 
 test("timestamp and date functions should return expected values", () => {
@@ -40,8 +41,8 @@ test("timestamp and date functions should return expected values", () => {
 	const actualTimestamp = UUIDv7.timestamp(id);
 	const actualDate = UUIDv7.date(id);
 
-	assert.strictEqual(expectedTimestamp, actualTimestamp);
-	assert.deepStrictEqual(expectedDate, actualDate);
+	expect(actualTimestamp).toBe(expectedTimestamp);
+	expect(actualDate).toEqual(expectedDate);
 });
 
 test("generated and encoded 1_000_000 UUIDs using default Base58 alphabet should match the original UUIDs when decoded", () => {
@@ -53,8 +54,8 @@ test("generated and encoded 1_000_000 UUIDs using default Base58 alphabet should
 		const decodedId = uuid.decode(encodedId);
 		const decodedOrThrowId = uuid.decodeOrThrow(encodedId);
 
-		assert.deepStrictEqual(id, decodedId);
-		assert.deepStrictEqual(id, decodedOrThrowId);
+		expect(decodedId).toEqual(id);
+		expect(decodedOrThrowId).toEqual(id);
 	}
 });
 
@@ -68,8 +69,8 @@ test("generated and encoded 1_000_000 UUIDs using Crockford Base32 alphabet shou
 		const decodedId = uuid.decode(encodedId);
 		const decodedOrThrowId = uuid.decodeOrThrow(encodedId);
 
-		assert.deepStrictEqual(id, decodedId);
-		assert.deepStrictEqual(id, decodedOrThrowId);
+		expect(decodedId).toEqual(id);
+		expect(decodedOrThrowId).toEqual(id);
 	}
 });
 
@@ -83,8 +84,8 @@ test("generated and encoded 1_000_000 UUIDs using Base48 alphabet should match t
 		const decodedId = uuid.decode(encodedId);
 		const decodedOrThrowId = uuid.decodeOrThrow(encodedId);
 
-		assert.deepStrictEqual(id, decodedId);
-		assert.deepStrictEqual(id, decodedOrThrowId);
+		expect(decodedId).toEqual(id);
+		expect(decodedOrThrowId).toEqual(id);
 	}
 });
 
@@ -94,9 +95,9 @@ test("function aliases should work as expected", () => {
 	const decodedId = decodeUUIDv7(encodedId);
 	const decodedOrThrowId = decodeOrThrowUUIDv7(encodedId);
 
-	assert.strictEqual(UUIDv7.isValid(id), true);
-	assert.strictEqual(id, decodedId);
-	assert.strictEqual(id, decodedOrThrowId);
+	expect(UUIDv7.isValid(id)).toBe(true);
+	expect(decodedId).toBe(id);
+	expect(decodedOrThrowId).toBe(id);
 });
 
 test("invalid UUIDs should be detected", () => {
@@ -105,24 +106,97 @@ test("invalid UUIDs should be detected", () => {
 	const invalid3 = "12345678-1234-1234-1234-123456789012";
 	const invalid4 = "c8cb31ca-8fb7-476d-806a-e2181dcdf980"; // UUIDv4 should not pass this test
 
-	assert.strictEqual(UUIDv7.isValid(invalid1), false);
-	assert.strictEqual(UUIDv7.isValid(invalid2), false);
-	assert.strictEqual(UUIDv7.isValid(invalid3), false);
-	assert.strictEqual(UUIDv7.isValid(invalid4), false);
+	expect(UUIDv7.isValid(invalid1)).toBe(false);
+	expect(UUIDv7.isValid(invalid2)).toBe(false);
+	expect(UUIDv7.isValid(invalid3)).toBe(false);
+	expect(UUIDv7.isValid(invalid4)).toBe(false);
 });
 
 test("invalid encoded UUIDs should return null when decoded with `decode`", () => {
 	const invalidEncoded1 = "invalid encoded id";
 	const invalidEncoded2 = "c8cb31ca-8fb7-476d-806a-e2181dcdf980";
 
-	assert.strictEqual(decodeUUIDv7(invalidEncoded1), null);
-	assert.strictEqual(decodeUUIDv7(invalidEncoded2), null);
+	expect(decodeUUIDv7(invalidEncoded1)).toBeNull();
+	expect(decodeUUIDv7(invalidEncoded2)).toBeNull();
 });
 
 test("invalid encoded UUIDs should throw error when decoded with `decodeOrThrow`", () => {
 	const invalidEncoded1 = "invalid encoded id";
 	const invalidEncoded2 = "c8cb31ca-8fb7-476d-806a-e2181dcdf980";
 
-	assert.throws(() => decodeOrThrowUUIDv7(invalidEncoded1));
-	assert.throws(() => decodeOrThrowUUIDv7(invalidEncoded2));
+	expect(() => decodeOrThrowUUIDv7(invalidEncoded1)).toThrow();
+	expect(() => decodeOrThrowUUIDv7(invalidEncoded2)).toThrow();
+});
+
+test("gen() with blockOnBackwardsClock: true should wait for the clock to catch up", () => {
+	const uuid = new UUIDv7({ blockOnBackwardsClock: true });
+	const baseTime = 1_700_000_000_000;
+
+	const nowSpy = vi.spyOn(Date, "now").mockReturnValue(baseTime);
+	const first = uuid.gen();
+	expect(UUIDv7.timestamp(first)).toBe(baseTime);
+
+	// Simulate clock skew: Date.now returns earlier value the first few reads,
+	// then catches up. The generator must spin until catch-up, then emit a UUID
+	// whose embedded timestamp equals the caught-up value (not the pinned one).
+	let reads = 0;
+	nowSpy.mockImplementation(() => {
+		reads++;
+		return reads < 5 ? baseTime - 100 : baseTime + 1;
+	});
+
+	const second = uuid.gen();
+	expect(reads).toBeGreaterThanOrEqual(5);
+	expect(UUIDv7.timestamp(second)).toBe(baseTime + 1);
+	expect(second > first).toBe(true);
+});
+
+test("gen() (default) should not spin when the clock goes backwards", () => {
+	const uuid = new UUIDv7();
+	const baseTime = 1_700_000_000_000;
+
+	const nowSpy = vi.spyOn(Date, "now").mockReturnValue(baseTime);
+	const first = uuid.gen();
+
+	// Jump the clock back five seconds. v1 would busy-wait until it caught up.
+	nowSpy.mockReturnValue(baseTime - 5_000);
+	const start = performance.now();
+	const second = uuid.gen();
+	const elapsed = performance.now() - start;
+
+	expect(elapsed).toBeLessThan(10);
+	expect(UUIDv7.isValid(second)).toBe(true);
+	expect(second > first).toBe(true); // pinned timestamp + counter increment keeps it monotonic
+});
+
+test("decode() should reject pathological input lengths quickly", () => {
+	const uuid = new UUIDv7();
+	const longInput = "A".repeat(10_000);
+
+	const start = performance.now();
+	const result = uuid.decode(longInput);
+	const elapsed = performance.now() - start;
+
+	expect(result).toBeNull();
+	expect(elapsed).toBeLessThan(10);
+	expect(() => uuid.decodeOrThrow(longInput)).toThrow();
+});
+
+test("decode() should reject empty input", () => {
+	const uuid = new UUIDv7();
+	expect(uuid.decode("")).toBeNull();
+	expect(() => uuid.decodeOrThrow("")).toThrow();
+});
+
+test("burst generation within a single millisecond should be monotonic", () => {
+	const uuid = new UUIDv7();
+	vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
+
+	const ids = uuid.genMany(10_000);
+	for (let i = 1; i < ids.length; i++) {
+		expect(UUIDv7.isValid(ids[i]!)).toBe(true);
+		if (ids[i]! <= ids[i - 1]!) {
+			throw new Error(`Not monotonic at ${i}: ${ids[i]!} <= ${ids[i - 1]!}`);
+		}
+	}
 });

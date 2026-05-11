@@ -33,10 +33,16 @@ const decoded = decodeUUIDv7(encoded); // // 018ef3e8-90e2-7be4-b4ea-4be3bf8803b
 ## Create a new instance
 
 ```typescript
-const uuid = new UUIDv7(opts?: { encodeAlphabet?: string })
+const uuid = new UUIDv7(opts?: {
+  encodeAlphabet?: string;
+  blockOnBackwardsClock?: boolean;
+})
 ```
 
-Creates a new `UUIDv7` instance. By default it uses the [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2) alphabet to `encode` and `decode` UUIDs, but you can pass a custom alphabet (16-64 characters).
+Creates a new `UUIDv7` instance.
+
+- `encodeAlphabet`: alphabet used for `encode` / `decode`. Defaults to the [Base58](https://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/index-seo.php/BITCOIN_____A2BASE58-CHARACTERS_A2) alphabet. ASCII, 16-64 characters, no duplicates.
+- `blockOnBackwardsClock`: when `true`, `gen()` synchronously busy-waits if the system clock goes backwards relative to the last observed timestamp, until the clock catches up. The embedded UUID timestamp will always reflect the actual wall clock at the cost of blocking the event loop for the duration of any backwards skew. Defaults to `false` (timestamp is pinned and the monotonic counter advances). Has no effect on the custom-timestamp path. See [Implementation details](#implementation-details).
 
 ### Instance methods
 
@@ -119,20 +125,20 @@ The library provides a few function aliases for convenience. You can use them wi
 
 ## Implementation details
 
-This library implements the [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-7) spec to generate UUIDv7s:
+This library implements the [RFC 9562](https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-7) spec to generate UUIDv7s, following [method 2](https://datatracker.ietf.org/doc/html/rfc9562#monotonicity_counters) ("Monotonic Random") of the "Monotonicity and Counters" section. Monotonicity and uniqueness are guaranteed per `UUIDv7` instance.
 
-- if the current timestamp is ahead of the last stored one, it generates new `rand_a` and `rand_b` parts;
-- if the current timestamp is behind the last stored one, it waits for the next valid timestamp to return a UUIDv7 with newly generated `rand_a` and `rand_b` parts;
-- if the current timestamp is the same as the last stored one:
-  - it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order. `rand_b` is the primary counter, and `rand_a` is used as the secondary one, when `rand_b` overflows its 62 bits (rare case). When used as a counter, `rand_b` increments its previous random value by a random integer between 1 and 4,294,967,296 (2^32), and `rand_a` increments its previous random value by 1, while generating a new `rand_b` part.
-  - if both counters overflow their bit sizes, the generation function waits for the next millisecond to return a UUIDv7 with newly generated random parts.
+For the default (runtime-clock) generation path:
 
-This approach follows the [method 2](https://datatracker.ietf.org/doc/html/rfc9562#monotonicity_counters) of the "Monotonicity and Counters" section of the spec. It guarantees monotonicity and uniqueness per instance, and always keeps timestamp the same as `Date.now()` value.
+- if the current timestamp is ahead of the last stored one, new `rand_a` and `rand_b` parts are generated;
+- if the current timestamp is **behind** the last stored one (clock skew, NTP step-back, VM time-warp), the timestamp is pinned to the last stored value and the monotonic counter advances. The library never busy-waits on a backwards clock by default. Opt into the v1 behavior with `new UUIDv7({ blockOnBackwardsClock: true })`: `gen()` will then synchronously wait until the wall clock catches up, at the cost of blocking the event loop for the duration of the skew;
+- if the current timestamp is equal to the last stored one, `rand_b` is incremented by a random integer in `[1, 2^32]` as the primary counter. When `rand_b` overflows its 62 bits, `rand_a` is incremented by 1 as a secondary counter and `rand_b` is freshly seeded. When **both** counters overflow within one millisecond (extraordinarily rare), the timestamp is advanced by 1ms and the random parts are regenerated. RFC 9562 §6.2 permits this sub-millisecond drift.
 
-If you provide a custom timestamp, it will be used instead of the current one. Generation works differently in this case:
+For the **custom-timestamp** generation path:
 
-- if the custom timestamp is different from the last custom stored one, it generates new `rand_a` and `rand_b` parts;
-- if the custom timestamp is the same as the last custom stored one, it uses `rand_b` and then `rand_a` as randomly seeded counters, in that order, just like the normal generation method. If both `rand_a` and `rand_b` overflow, though, the generator creates new `rand_a` and `rand_b` parts. This breaks monotonicity per instance with custom timestamp, but ensures that a valid UUIDv7 is always returned. Keep in mind that this is an extremely rare case and should really never happen.
+- if the custom timestamp differs from the last custom timestamp, new random parts are generated;
+- if it matches, the same counter logic above applies. On the extremely rare event that both counters overflow under a fixed custom timestamp, the random parts are regenerated. This breaks monotonicity for that specific case but guarantees a valid UUIDv7 is always returned without altering the caller's timestamp.
+
+The custom-timestamp state is tracked separately from the runtime-clock state, so the two paths do not interfere.
 
 ## Field and Bit Layout
 
