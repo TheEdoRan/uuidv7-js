@@ -10,8 +10,6 @@
 		"moduleResolution": "Bundler",
 		"removeComments": false,
 		"strict": true,
-		"strictPropertyInitialization": false,
-		"useUnknownInCatchVariables": false,
 		"forceConsistentCasingInFileNames": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,

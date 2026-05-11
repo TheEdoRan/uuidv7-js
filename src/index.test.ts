@@ -1,5 +1,9 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { UUIDv7, decodeOrThrowUUIDv7, decodeUUIDv7, encodeUUIDv7, uuidv7 } from ".";
+
+afterEach(() => {
+	vi.restoreAllMocks();
+});
 
 test("1_000_000 generated UUIDs with default timestamp should be valid and monotonic", () => {
 	const uuid = new UUIDv7();
@@ -123,3 +127,54 @@ test("invalid encoded UUIDs should throw error when decoded with `decodeOrThrow`
 	expect(() => decodeOrThrowUUIDv7(invalidEncoded1)).toThrow();
 	expect(() => decodeOrThrowUUIDv7(invalidEncoded2)).toThrow();
 });
+
+test("gen() should not spin when the clock goes backwards", () => {
+	const uuid = new UUIDv7();
+	const baseTime = 1_700_000_000_000;
+
+	const nowSpy = vi.spyOn(Date, "now").mockReturnValue(baseTime);
+	const first = uuid.gen();
+
+	// Jump the clock back five seconds. v1 would busy-wait until it caught up.
+	nowSpy.mockReturnValue(baseTime - 5_000);
+	const start = performance.now();
+	const second = uuid.gen();
+	const elapsed = performance.now() - start;
+
+	expect(elapsed).toBeLessThan(10);
+	expect(UUIDv7.isValid(second)).toBe(true);
+	expect(second > first).toBe(true); // pinned timestamp + counter increment keeps it monotonic
+});
+
+test("decode() should reject pathological input lengths quickly", () => {
+	const uuid = new UUIDv7();
+	const longInput = "A".repeat(10_000);
+
+	const start = performance.now();
+	const result = uuid.decode(longInput);
+	const elapsed = performance.now() - start;
+
+	expect(result).toBeNull();
+	expect(elapsed).toBeLessThan(10);
+	expect(() => uuid.decodeOrThrow(longInput)).toThrow();
+});
+
+test("decode() should reject empty input", () => {
+	const uuid = new UUIDv7();
+	expect(uuid.decode("")).toBeNull();
+	expect(() => uuid.decodeOrThrow("")).toThrow();
+});
+
+test("burst generation within a single millisecond should be monotonic", () => {
+	const uuid = new UUIDv7();
+	vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
+
+	const ids = uuid.genMany(10_000);
+	for (let i = 1; i < ids.length; i++) {
+		expect(UUIDv7.isValid(ids[i]!)).toBe(true);
+		if (ids[i]! <= ids[i - 1]!) {
+			throw new Error(`Not monotonic at ${i}: ${ids[i]!} <= ${ids[i - 1]!}`);
+		}
+	}
+});
+
